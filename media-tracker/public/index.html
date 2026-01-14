@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Media Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=SF+Pro+Text:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-tertiary: #2c2c2e;
+            --bg-elevated: #3a3a3c;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --text-tertiary: #636366;
+            --accent-blue: #0a84ff;
+            --accent-green: #30d158;
+            --accent-orange: #ff9f0a;
+            --accent-red: #ff453a;
+            --accent-purple: #bf5af2;
+            --border-color: rgba(255,255,255,0.1);
+            --safe-area-top: env(safe-area-inset-top, 20px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: var(--safe-area-top) 0 var(--safe-area-bottom);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0 30px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* States */
+        .state {
+            display: none;
+        }
+
+        .state.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Search State */
+        .search-form {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 17px;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: var(--bg-elevated);
+        }
+
+        .input-group input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .input-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 44px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* Results */
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .result-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            border: 2px solid transparent;
+        }
+
+        .result-card:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .result-card:active {
+            transform: scale(0.98);
+        }
+
+        .result-card.selected {
+            border-color: var(--accent-blue);
+            background: rgba(10, 132, 255, 0.1);
+        }
+
+        .result-poster {
+            width: 70px;
+            height: 105px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: var(--bg-tertiary);
+            flex-shrink: 0;
+        }
+
+        .result-poster.no-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--text-tertiary);
+        }
+
+        .result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .result-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .result-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .result-badge.movie {
+            background: rgba(191, 90, 242, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .result-badge.tv {
+            background: rgba(10, 132, 255, 0.2);
+            color: var(--accent-blue);
+        }
+
+        .result-overview {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        /* Confirm State */
+        .confirm-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .confirm-poster-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+        }
+
+        .confirm-backdrop {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .confirm-backdrop.no-image {
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-poster-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(to top, var(--bg-secondary) 0%, transparent 100%);
+        }
+
+        .confirm-poster-small {
+            position: absolute;
+            bottom: -30px;
+            left: 20px;
+            width: 80px;
+            height: 120px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 3px solid var(--bg-secondary);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            background: var(--bg-tertiary);
+        }
+
+        .confirm-content {
+            padding: 50px 20px 20px;
+        }
+
+        .confirm-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .confirm-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .confirm-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .confirm-meta-item svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .confirm-genres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .genre-tag {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .confirm-overview {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Success State */
+        .success-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent-green), #25a244);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+            animation: successPop 0.5s ease;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-content h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .success-content p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 32px;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(255, 69, 58, 0.15);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message p {
+            color: var(--accent-red);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .no-results h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .no-results p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Info Text */
+        .info-text {
+            text-align: center;
+            padding: 16px;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        .info-text a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">🎬</div>
+            <h1>Media Tracker</h1>
+            <p>Add films & shows to your watchlist</p>
+        </div>
+
+        <!-- Search State -->
+        <div id="state-search" class="state active">
+            <div id="error-message" class="error-message">
+                <p id="error-text"></p>
+            </div>
+
+            <div class="search-form">
+                <div class="input-group">
+                    <label>Title</label>
+                    <input type="text" id="search-input" placeholder="Enter film or show name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                </div>
+                <div class="input-group">
+                    <label>Type</label>
+                    <select id="media-type">
+                        <option value="multi">Movie or TV Show</option>
+                        <option value="movie">Movie</option>
+                        <option value="tv">TV Show</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="search-btn">Search</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="state-loading" class="state">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p id="loading-text">Searching...</p>
+            </div>
+        </div>
+
+        <!-- Results State -->
+        <div id="state-results" class="state">
+            <p class="info-text" style="margin-bottom: 16px;">Select a result to add to your watchlist</p>
+            <div id="results-list" class="results-list"></div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="back-to-search">Back</button>
+            </div>
+        </div>
+
+        <!-- Confirm State -->
+        <div id="state-confirm" class="state">
+            <div class="confirm-card" id="confirm-card"></div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="back-to-results">Back</button>
+                <button class="btn btn-success" id="confirm-add">Add to Notion</button>
+            </div>
+        </div>
+
+        <!-- Success State -->
+        <div id="state-success" class="state">
+            <div class="success-content">
+                <div class="success-icon">✓</div>
+                <h2>Added to Watchlist!</h2>
+                <p id="success-title"></p>
+                <button class="btn btn-primary" id="add-another">Add Another</button>
+            </div>
+        </div>
+
+        <p class="info-text">
+            Data from <a href="https://www.themoviedb.org" target="_blank">TMDB</a>
+        </p>
+    </div>
+
+    <script>
+        // State management
+        let currentResults = [];
+        let selectedMedia = null;
+
+        // DOM Elements
+        const states = {
+            search: document.getElementById('state-search'),
+            loading: document.getElementById('state-loading'),
+            results: document.getElementById('state-results'),
+            confirm: document.getElementById('state-confirm'),
+            success: document.getElementById('state-success')
+        };
+
+        const elements = {
+            searchInput: document.getElementById('search-input'),
+            mediaType: document.getElementById('media-type'),
+            searchBtn: document.getElementById('search-btn'),
+            loadingText: document.getElementById('loading-text'),
+            resultsList: document.getElementById('results-list'),
+            confirmCard: document.getElementById('confirm-card'),
+            successTitle: document.getElementById('success-title'),
+            errorMessage: document.getElementById('error-message'),
+            errorText: document.getElementById('error-text'),
+            backToSearch: document.getElementById('back-to-search'),
+            backToResults: document.getElementById('back-to-results'),
+            confirmAdd: document.getElementById('confirm-add'),
+            addAnother: document.getElementById('add-another')
+        };
+
+        // Show state
+        function showState(stateName) {
+            Object.values(states).forEach(s => s.classList.remove('active'));
+            states[stateName].classList.add('active');
+        }
+
+        // Show error
+        function showError(message) {
+            elements.errorText.textContent = message;
+            elements.errorMessage.classList.add('show');
+            setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
+        }
+
+        // Check URL params on load (for Shortcut integration)
+        function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const title = params.get('title');
+            const type = params.get('type');
+
+            if (title) {
+                elements.searchInput.value = title;
+                if (type === 'movie' || type === 'tv') {
+                    elements.mediaType.value = type;
+                }
+                // Auto-search
+                performSearch();
+            }
+        }
+
+        // Search function
+        async function performSearch() {
+            const query = elements.searchInput.value.trim();
+            const type = elements.mediaType.value;
+
+            if (!query) {
+                showError('Please enter a title to search');
+                return;
+            }
+
+            showState('loading');
+            elements.loadingText.textContent = 'Searching...';
+
+            try {
+                const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&type=${type}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Search failed');
+                }
+
+                currentResults = data.results || [];
+
+                if (currentResults.length === 0) {
+                    elements.resultsList.innerHTML = `
+                        <div class="no-results">
+                            <div class="no-results-icon">🔍</div>
+                            <h3>No results found</h3>
+                            <p>Try a different search term</p>
+                        </div>
+                    `;
+                } else {
+                    renderResults();
+                }
+                showState('results');
+            } catch (error) {
+                showState('search');
+                showError(error.message);
+            }
+        }
+
+        // Render results
+        function renderResults() {
+            elements.resultsList.innerHTML = currentResults.map((item, index) => {
+                const isMovie = item.media_type === 'movie' || item.title;
+                const title = isMovie ? item.title : item.name;
+                const date = isMovie ? item.release_date : item.first_air_date;
+                const year = date ? new Date(date).getFullYear() : '';
+                const posterUrl = item.poster_path 
+                    ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
+                    : null;
+
+                return `
+                    <div class="result-card" data-index="${index}">
+                        ${posterUrl 
+                            ? `<img src="${posterUrl}" alt="${title}" class="result-poster">`
+                            : `<div class="result-poster no-image">🎬</div>`
+                        }
+                        <div class="result-info">
+                            <div class="result-title">${title}</div>
+                            <div class="result-meta">${year}</div>
+                            <span class="result-badge ${isMovie ? 'movie' : 'tv'}">${isMovie ? 'Movie' : 'TV Show'}</span>
+                            ${item.overview ? `<div class="result-overview">${item.overview}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.result-card').forEach(card => {
+                card.addEventListener('click', () => selectResult(parseInt(card.dataset.index)));
+            });
+        }
+
+        // Select result
+        async function selectResult(index) {
+            const item = currentResults[index];
+            const isMovie = item.media_type === 'movie' || item.title;
+            const mediaType = isMovie ? 'movie' : 'tv';
+
+            showState('loading');
+            elements.loadingText.textContent = 'Fetching details...';
+
+            try {
+                const response = await fetch(`/api/details?id=${item.id}&type=${mediaType}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch details');
+                }
+
+                selectedMedia = data;
+                renderConfirm();
+                showState('confirm');
+            } catch (error) {
+                showState('results');
+                showError(error.message);
+            }
+        }
+
+        // Render confirm
+        function renderConfirm() {
+            const item = selectedMedia;
+            const isMovie = item.type === 'movie';
+            const title = isMovie ? item.title : item.name;
+            const date = isMovie ? item.release_date : item.first_air_date;
+            const year = date ? new Date(date).getFullYear() : '';
+            
+            const posterUrl = item.poster_path 
+                ? `https://image.tmdb.org/t/p/w300${item.poster_path}`
+                : null;
+            const backdropUrl = item.backdrop_path 
+                ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+                : null;
+
+            const runtime = isMovie && item.runtime 
+                ? `${Math.floor(item.runtime / 60)}h ${item.runtime % 60}m`
+                : item.episode_run_time?.[0] 
+                    ? `${item.episode_run_time[0]} min/ep`
+                    : '';
+
+            elements.confirmCard.innerHTML = `
+                <div class="confirm-poster-container">
+                    ${backdropUrl 
+                        ? `<img src="${backdropUrl}" alt="${title}" class="confirm-backdrop">`
+                        : `<div class="confirm-backdrop no-image">🎬</div>`
+                    }
+                    <div class="confirm-poster-overlay"></div>
+                    ${posterUrl 
+                        ? `<img src="${posterUrl}" alt="${title}" class="confirm-poster-small">`
+                        : ''
+                    }
+                </div>
+                <div class="confirm-content">
+                    <h2 class="confirm-title">${title}</h2>
+                    <div class="confirm-meta">
+                        <span class="confirm-meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            ${year}
+                        </span>
+                        ${runtime ? `
+                            <span class="confirm-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                ${runtime}
+                            </span>
+                        ` : ''}
+                        ${item.vote_average ? `
+                            <span class="confirm-meta-item">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                ${item.vote_average.toFixed(1)}
+                            </span>
+                        ` : ''}
+                        <span class="confirm-meta-item">
+                            <span class="result-badge ${isMovie ? 'movie' : 'tv'}" style="margin: 0;">${isMovie ? 'Movie' : 'TV Show'}</span>
+                        </span>
+                    </div>
+                    ${item.genres?.length ? `
+                        <div class="confirm-genres">
+                            ${item.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${item.overview ? `<p class="confirm-overview">${item.overview}</p>` : ''}
+                </div>
+            `;
+        }
+
+        // Add to Notion
+        async function addToNotion() {
+            if (!selectedMedia) return;
+
+            elements.confirmAdd.disabled = true;
+            showState('loading');
+            elements.loadingText.textContent = 'Adding to Notion...';
+
+            try {
+                const response = await fetch('/api/add-to-notion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(selectedMedia)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to add to Notion');
+                }
+
+                const title = selectedMedia.type === 'movie' ? selectedMedia.title : selectedMedia.name;
+                elements.successTitle.textContent = `"${title}" has been added to your watchlist`;
+                showState('success');
+            } catch (error) {
+                showState('confirm');
+                showError(error.message);
+            } finally {
+                elements.confirmAdd.disabled = false;
+            }
+        }
+
+        // Event listeners
+        elements.searchBtn.addEventListener('click', performSearch);
+        elements.searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+        elements.backToSearch.addEventListener('click', () => showState('search'));
+        elements.backToResults.addEventListener('click', () => showState('results'));
+        elements.confirmAdd.addEventListener('click', addToNotion);
+        elements.addAnother.addEventListener('click', () => {
+            elements.searchInput.value = '';
+            currentResults = [];
+            selectedMedia = null;
+            showState('search');
+            // Clear URL params
+            window.history.replaceState({}, '', window.location.pathname);
+        });
+
+        // Initialize
+        checkUrlParams();
+    </script>
+</body>
+</html>
