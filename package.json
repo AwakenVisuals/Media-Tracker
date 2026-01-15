@@ -1,0 +1,12 @@
+{
+  "name": "media-tracker",
+  "version": "2.0.0",
+  "description": "Add any media to Notion via image recognition - Movies, TV, Books, Games, Anime, Podcasts & more",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "keywords": ["notion", "tmdb", "media-tracker", "claude", "vision", "ai"],
+  "author": "Nick - Awaken Visuals",
+  "license": "MIT"
+}

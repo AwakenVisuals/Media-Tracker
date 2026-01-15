@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Media Tracker</title>
+    <style>
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-tertiary: #2c2c2e;
+            --bg-elevated: #3a3a3c;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --text-tertiary: #636366;
+            --accent-blue: #0a84ff;
+            --accent-green: #30d158;
+            --accent-orange: #ff9f0a;
+            --accent-red: #ff453a;
+            --accent-purple: #bf5af2;
+            --accent-pink: #ff375f;
+            --accent-yellow: #ffd60a;
+            --border-color: rgba(255,255,255,0.1);
+            --safe-area-top: env(safe-area-inset-top, 20px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: var(--safe-area-top) 0 var(--safe-area-bottom);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0 30px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* States */
+        .state {
+            display: none;
+        }
+
+        .state.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Search State */
+        .search-form {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 17px;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: var(--bg-elevated);
+        }
+
+        .input-group input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .input-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 44px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* Success State */
+        .success-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent-green), #25a244);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+            animation: successPop 0.5s ease;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-content h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .success-content p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .success-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            margin: 24px 0;
+            text-align: left;
+        }
+
+        .success-poster {
+            width: 70px;
+            height: 105px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: var(--bg-tertiary);
+            flex-shrink: 0;
+        }
+
+        .success-poster.no-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--text-tertiary);
+        }
+
+        .success-poster.square {
+            width: 90px;
+            height: 90px;
+        }
+
+        .success-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .success-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .success-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .success-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .success-badge.movie { background: rgba(191, 90, 242, 0.2); color: var(--accent-purple); }
+        .success-badge.tv { background: rgba(10, 132, 255, 0.2); color: var(--accent-blue); }
+        .success-badge.book { background: rgba(255, 159, 10, 0.2); color: var(--accent-orange); }
+        .success-badge.podcast { background: rgba(255, 55, 95, 0.2); color: var(--accent-pink); }
+        .success-badge.game { background: rgba(48, 209, 88, 0.2); color: var(--accent-green); }
+        .success-badge.anime { background: rgba(255, 214, 10, 0.2); color: var(--accent-yellow); }
+        .success-badge.manga { background: rgba(255, 69, 58, 0.2); color: var(--accent-red); }
+        .success-badge.audiobook { background: rgba(175, 82, 222, 0.2); color: #af52de; }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(255, 69, 58, 0.15);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message p {
+            color: var(--accent-red);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Info Text */
+        .info-text {
+            text-align: center;
+            padding: 16px;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        .info-text a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        /* Close instruction */
+        .close-hint {
+            color: var(--text-tertiary);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        /* Media type icons in dropdown */
+        .media-type-hint {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">🎬</div>
+            <h1>Media Tracker</h1>
+            <p>Add anything to your watchlist</p>
+        </div>
+
+        <!-- Search State -->
+        <div id="state-search" class="state active">
+            <div id="error-message" class="error-message">
+                <p id="error-text"></p>
+            </div>
+
+            <div class="search-form">
+                <div class="input-group">
+                    <label>Title</label>
+                    <input type="text" id="search-input" placeholder="Enter title..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                </div>
+                <div class="input-group">
+                    <label>Type (Optional)</label>
+                    <select id="media-type">
+                        <option value="auto">🔍 Auto-detect</option>
+                        <option value="movie">🎬 Movie</option>
+                        <option value="tv">📺 TV Show</option>
+                        <option value="anime">🎌 Anime</option>
+                        <option value="book">📚 Book</option>
+                        <option value="audiobook">🎧 Audiobook</option>
+                        <option value="podcast">🎙️ Podcast</option>
+                        <option value="game">🎮 Video Game</option>
+                        <option value="manga">📖 Manga</option>
+                    </select>
+                </div>
+                <p class="media-type-hint">Leave on auto-detect for best results</p>
+            </div>
+
+            <button class="btn btn-primary" id="search-btn">Add to Watchlist</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="state-loading" class="state">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p id="loading-text">Searching...</p>
+            </div>
+        </div>
+
+        <!-- Success State -->
+        <div id="state-success" class="state">
+            <div class="success-content">
+                <div class="success-icon">✓</div>
+                <h2>Added to Watchlist!</h2>
+                <div id="success-card" class="success-card"></div>
+                <button class="btn btn-primary" id="add-another">Add Another</button>
+                <p class="close-hint">Or close this window</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="state-error" class="state">
+            <div class="success-content">
+                <div class="success-icon" style="background: linear-gradient(135deg, var(--accent-red), #c53030);">✕</div>
+                <h2 id="error-title">Couldn't Find It</h2>
+                <p id="error-detail">No results found for that title.</p>
+                <button class="btn btn-primary" id="try-again">Try Again</button>
+            </div>
+        </div>
+
+        <p class="info-text">
+            Powered by TMDB, Google Books, RAWG, Jikan & iTunes
+        </p>
+    </div>
+
+    <script>
+        // DOM Elements
+        const states = {
+            search: document.getElementById('state-search'),
+            loading: document.getElementById('state-loading'),
+            success: document.getElementById('state-success'),
+            error: document.getElementById('state-error')
+        };
+
+        const elements = {
+            searchInput: document.getElementById('search-input'),
+            mediaType: document.getElementById('media-type'),
+            searchBtn: document.getElementById('search-btn'),
+            loadingText: document.getElementById('loading-text'),
+            successCard: document.getElementById('success-card'),
+            errorMessage: document.getElementById('error-message'),
+            errorText: document.getElementById('error-text'),
+            errorTitle: document.getElementById('error-title'),
+            errorDetail: document.getElementById('error-detail'),
+            addAnother: document.getElementById('add-another'),
+            tryAgain: document.getElementById('try-again')
+        };
+
+        // Show state
+        function showState(stateName) {
+            Object.values(states).forEach(s => s.classList.remove('active'));
+            states[stateName].classList.add('active');
+        }
+
+        // Show inline error
+        function showError(message) {
+            elements.errorText.textContent = message;
+            elements.errorMessage.classList.add('show');
+            setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
+        }
+
+        // Check URL params on load
+        function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const title = params.get('title');
+            const type = params.get('type');
+
+            if (title) {
+                elements.searchInput.value = title;
+                if (type && ['movie', 'tv', 'anime', 'book', 'audiobook', 'podcast', 'game', 'manga'].includes(type)) {
+                    elements.mediaType.value = type;
+                }
+                performSearchAndAdd();
+            }
+        }
+
+        // Main function: Search and automatically add top result
+        async function performSearchAndAdd() {
+            const query = elements.searchInput.value.trim();
+            const type = elements.mediaType.value;
+
+            if (!query) {
+                showError('Please enter a title to search');
+                return;
+            }
+
+            showState('loading');
+            elements.loadingText.textContent = 'Searching...';
+
+            try {
+                // Call the unified search endpoint
+                const searchResponse = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, type })
+                });
+
+                const searchData = await searchResponse.json();
+
+                if (!searchResponse.ok) {
+                    throw new Error(searchData.error || 'Search failed');
+                }
+
+                if (!searchData.result) {
+                    elements.errorTitle.textContent = "Couldn't Find It";
+                    elements.errorDetail.textContent = `No results found for "${query}"`;
+                    showState('error');
+                    return;
+                }
+
+                // Add to Notion
+                elements.loadingText.textContent = 'Adding to Notion...';
+
+                const addResponse = await fetch('/api/add-to-notion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(searchData.result)
+                });
+
+                const addData = await addResponse.json();
+
+                if (!addResponse.ok) {
+                    throw new Error(addData.error || 'Failed to add to Notion');
+                }
+
+                // Show success
+                renderSuccess(searchData.result);
+                showState('success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                elements.errorTitle.textContent = 'Something Went Wrong';
+                elements.errorDetail.textContent = error.message;
+                showState('error');
+            }
+        }
+
+        // Get emoji for media type
+        function getMediaEmoji(type) {
+            const emojis = {
+                movie: '🎬',
+                tv: '📺',
+                anime: '🎌',
+                book: '📚',
+                audiobook: '🎧',
+                podcast: '🎙️',
+                game: '🎮',
+                manga: '📖'
+            };
+            return emojis[type] || '📀';
+        }
+
+        // Get display name for media type
+        function getMediaDisplayName(type) {
+            const names = {
+                movie: 'Movie',
+                tv: 'TV Show',
+                anime: 'Anime',
+                book: 'Book',
+                audiobook: 'Audiobook',
+                podcast: 'Podcast',
+                game: 'Video Game',
+                manga: 'Manga'
+            };
+            return names[type] || type;
+        }
+
+        // Render success card
+        function renderSuccess(item) {
+            const title = item.title;
+            const year = item.year || '';
+            const imageUrl = item.imageUrl;
+            const mediaType = item.mediaType;
+            const platform = item.platform;
+            const isSquare = ['podcast', 'game', 'audiobook'].includes(mediaType);
+
+            elements.successCard.innerHTML = `
+                ${imageUrl 
+                    ? `<img src="${imageUrl}" alt="${title}" class="success-poster ${isSquare ? 'square' : ''}">`
+                    : `<div class="success-poster ${isSquare ? 'square' : ''} no-image">${getMediaEmoji(mediaType)}</div>`
+                }
+                <div class="success-info">
+                    <div class="success-title">${title}</div>
+                    <div class="success-meta">${year}${platform ? ` · ${platform}` : ''}</div>
+                    <span class="success-badge ${mediaType}">${getMediaDisplayName(mediaType)}</span>
+                </div>
+            `;
+        }
+
+        // Reset and go back to search
+        function resetToSearch() {
+            elements.searchInput.value = '';
+            showState('search');
+            window.history.replaceState({}, '', window.location.pathname);
+            elements.searchInput.focus();
+        }
+
+        // Event listeners
+        elements.searchBtn.addEventListener('click', performSearchAndAdd);
+        elements.searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearchAndAdd();
+        });
+        elements.addAnother.addEventListener('click', resetToSearch);
+        elements.tryAgain.addEventListener('click', resetToSearch);
+
+        // Initialize
+        checkUrlParams();
+    </script>
+</body>
+</html>
