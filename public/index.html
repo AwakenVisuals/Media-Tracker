@@ -373,6 +373,185 @@
             margin-top: 8px;
             text-align: center;
         }
+
+        /* Camera Upload */
+        .upload-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .upload-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .upload-btn {
+            background: var(--bg-tertiary);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .upload-btn:hover {
+            border-color: var(--accent-blue);
+            background: var(--bg-elevated);
+        }
+
+        .upload-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        #image-input {
+            display: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: var(--text-tertiary);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        /* Results List */
+        .results-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .results-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .results-header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, transform 0.1s;
+        }
+
+        .result-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .result-item:active {
+            transform: scale(0.98);
+        }
+
+        .result-item.selected {
+            border-color: var(--accent-blue);
+            background: var(--bg-tertiary);
+        }
+
+        .result-poster {
+            width: 60px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: var(--bg-tertiary);
+            flex-shrink: 0;
+        }
+
+        .result-poster.no-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--text-tertiary);
+        }
+
+        .result-poster.square {
+            width: 70px;
+            height: 70px;
+        }
+
+        .result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .result-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .result-badge.movie { background: rgba(191, 90, 242, 0.2); color: var(--accent-purple); }
+        .result-badge.tv { background: rgba(10, 132, 255, 0.2); color: var(--accent-blue); }
+        .result-badge.book { background: rgba(255, 159, 10, 0.2); color: var(--accent-orange); }
+        .result-badge.podcast { background: rgba(255, 55, 95, 0.2); color: var(--accent-pink); }
+        .result-badge.game { background: rgba(48, 209, 88, 0.2); color: var(--accent-green); }
+        .result-badge.anime { background: rgba(255, 214, 10, 0.2); color: var(--accent-yellow); }
+        .result-badge.manga { background: rgba(255, 69, 58, 0.2); color: var(--accent-red); }
+        .result-badge.audiobook { background: rgba(175, 82, 222, 0.2); color: #af52de; }
     </style>
 </head>
 <body>
@@ -389,6 +568,19 @@
                 <p id="error-text"></p>
             </div>
 
+            <!-- Camera Upload Section -->
+            <div class="upload-section">
+                <label class="upload-label">Scan Media</label>
+                <label for="image-input" class="upload-btn">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-text">Take Photo or Upload Screenshot</div>
+                </label>
+                <input type="file" id="image-input" accept="image/*" capture="environment">
+            </div>
+
+            <div class="divider">or enter manually</div>
+
+            <!-- Manual Search Form -->
             <div class="search-form">
                 <div class="input-group">
                     <label>Title</label>
@@ -411,7 +603,20 @@
                 <p class="media-type-hint">Leave on auto-detect for best results</p>
             </div>
 
-            <button class="btn btn-primary" id="search-btn">Add to Watchlist</button>
+            <button class="btn btn-primary" id="search-btn">Search</button>
+        </div>
+
+        <!-- Results Selection State -->
+        <div id="state-results" class="state">
+            <div class="results-header">
+                <h2>Select a Match</h2>
+                <p id="results-count">Choose the correct item</p>
+            </div>
+
+            <div id="results-list" class="results-list"></div>
+
+            <button class="btn btn-primary" id="add-selected" disabled>Add to Watchlist</button>
+            <button class="btn btn-secondary" id="back-to-search" style="margin-top: 12px;">Back to Search</button>
         </div>
 
         <!-- Loading State -->
@@ -452,6 +657,7 @@
         // DOM Elements
         const states = {
             search: document.getElementById('state-search'),
+            results: document.getElementById('state-results'),
             loading: document.getElementById('state-loading'),
             success: document.getElementById('state-success'),
             error: document.getElementById('state-error')
@@ -461,6 +667,11 @@
             searchInput: document.getElementById('search-input'),
             mediaType: document.getElementById('media-type'),
             searchBtn: document.getElementById('search-btn'),
+            imageInput: document.getElementById('image-input'),
+            resultsList: document.getElementById('results-list'),
+            resultsCount: document.getElementById('results-count'),
+            addSelected: document.getElementById('add-selected'),
+            backToSearch: document.getElementById('back-to-search'),
             loadingText: document.getElementById('loading-text'),
             successCard: document.getElementById('success-card'),
             errorMessage: document.getElementById('error-message'),
@@ -470,6 +681,10 @@
             addAnother: document.getElementById('add-another'),
             tryAgain: document.getElementById('try-again')
         };
+
+        // Global state
+        let searchResults = [];
+        let selectedResult = null;
 
         // Show state
         function showState(stateName) {
@@ -495,12 +710,12 @@
                 if (type && ['movie', 'tv', 'anime', 'book', 'audiobook', 'podcast', 'game', 'manga'].includes(type)) {
                     elements.mediaType.value = type;
                 }
-                performSearchAndAdd();
+                performSearch();
             }
         }
 
-        // Main function: Search and automatically add top result
-        async function performSearchAndAdd() {
+        // Main function: Search and show results
+        async function performSearch() {
             const query = elements.searchInput.value.trim();
             const type = elements.mediaType.value;
 
@@ -526,20 +741,85 @@
                     throw new Error(searchData.error || 'Search failed');
                 }
 
-                if (!searchData.result) {
+                if (!searchData.results || searchData.results.length === 0) {
                     elements.errorTitle.textContent = "Couldn't Find It";
                     elements.errorDetail.textContent = `No results found for "${query}"`;
                     showState('error');
                     return;
                 }
 
-                // Add to Notion
-                elements.loadingText.textContent = 'Adding to Notion...';
+                // Show results selection screen
+                searchResults = searchData.results;
+                renderResults(searchResults);
+                showState('results');
 
+            } catch (error) {
+                console.error('Error:', error);
+                elements.errorTitle.textContent = 'Something Went Wrong';
+                elements.errorDetail.textContent = error.message;
+                showState('error');
+            }
+        }
+
+        // Render results list
+        function renderResults(results) {
+            selectedResult = null;
+            elements.addSelected.disabled = true;
+            elements.resultsCount.textContent = `Found ${results.length} ${results.length === 1 ? 'match' : 'matches'}`;
+
+            elements.resultsList.innerHTML = results.map((item, index) => {
+                const isSquare = ['podcast', 'game', 'audiobook'].includes(item.mediaType);
+                return `
+                    <div class="result-item" data-index="${index}">
+                        ${item.imageUrl
+                            ? `<img src="${item.imageUrl}" alt="${item.title}" class="result-poster ${isSquare ? 'square' : ''}">`
+                            : `<div class="result-poster ${isSquare ? 'square' : ''} no-image">${getMediaEmoji(item.mediaType)}</div>`
+                        }
+                        <div class="result-info">
+                            <div class="result-title">${item.title}</div>
+                            <div class="result-meta">${item.year || 'Unknown year'}${item.platform ? ` · ${item.platform}` : ''}</div>
+                            <span class="result-badge ${item.mediaType}">${getMediaDisplayName(item.mediaType)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.dataset.index);
+                    selectResult(index);
+                });
+            });
+        }
+
+        // Select a result
+        function selectResult(index) {
+            selectedResult = searchResults[index];
+            elements.addSelected.disabled = false;
+
+            // Update UI
+            document.querySelectorAll('.result-item').forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        // Add selected item to Notion
+        async function addSelectedToNotion() {
+            if (!selectedResult) return;
+
+            showState('loading');
+            elements.loadingText.textContent = 'Adding to Notion...';
+
+            try {
                 const addResponse = await fetch('/api/add-to-notion', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(searchData.result)
+                    body: JSON.stringify(selectedResult)
                 });
 
                 const addData = await addResponse.json();
@@ -549,7 +829,7 @@
                 }
 
                 // Show success
-                renderSuccess(searchData.result);
+                renderSuccess(selectedResult);
                 showState('success');
 
             } catch (error) {
@@ -558,6 +838,88 @@
                 elements.errorDetail.textContent = error.message;
                 showState('error');
             }
+        }
+
+        // Handle image upload
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showState('loading');
+            elements.loadingText.textContent = 'Analyzing image...';
+
+            try {
+                // Convert image to base64
+                const base64 = await fileToBase64(file);
+
+                // Analyze image with Claude
+                const analyzeResponse = await fetch('/api/analyse-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                });
+
+                const analyzeData = await analyzeResponse.json();
+
+                if (!analyzeResponse.ok) {
+                    throw new Error(analyzeData.error || 'Image analysis failed');
+                }
+
+                if (!analyzeData.identified) {
+                    throw new Error(analyzeData.message || 'Could not identify media in the image');
+                }
+
+                const { title, type } = analyzeData;
+
+                // Search for the identified media
+                elements.loadingText.textContent = `Searching for "${title}"...`;
+
+                const searchResponse = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: title, type: type || 'auto' })
+                });
+
+                const searchData = await searchResponse.json();
+
+                if (!searchResponse.ok) {
+                    throw new Error(searchData.error || 'Search failed');
+                }
+
+                if (!searchData.results || searchData.results.length === 0) {
+                    elements.errorTitle.textContent = "Couldn't Find It";
+                    elements.errorDetail.textContent = `Found "${title}" in image but no results in databases`;
+                    showState('error');
+                    return;
+                }
+
+                // Show results selection screen
+                searchResults = searchData.results;
+                renderResults(searchResults);
+                showState('results');
+
+            } catch (error) {
+                console.error('Error:', error);
+                elements.errorTitle.textContent = 'Image Analysis Failed';
+                elements.errorDetail.textContent = error.message;
+                showState('error');
+            } finally {
+                // Reset file input
+                event.target.value = '';
+            }
+        }
+
+        // Convert file to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
 
         // Get emoji for media type
@@ -621,10 +983,13 @@
         }
 
         // Event listeners
-        elements.searchBtn.addEventListener('click', performSearchAndAdd);
+        elements.searchBtn.addEventListener('click', performSearch);
         elements.searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') performSearchAndAdd();
+            if (e.key === 'Enter') performSearch();
         });
+        elements.imageInput.addEventListener('change', handleImageUpload);
+        elements.addSelected.addEventListener('click', addSelectedToNotion);
+        elements.backToSearch.addEventListener('click', resetToSearch);
         elements.addAnother.addEventListener('click', resetToSearch);
         elements.tryAgain.addEventListener('click', resetToSearch);
 
