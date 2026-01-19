@@ -58,7 +58,16 @@ export default async (request, context) => {
                     results = await searchTMDB(query, 'tv', TMDB_API_KEY);
                     break;
                 case 'anime':
+                    // Try Jikan first, fallback to TMDB if Jikan fails
                     results = await searchAnime(query);
+                    if (!results || results.length === 0) {
+                        // Fallback to TMDB for anime that might be listed there
+                        const tmdbResults = await searchTMDB(query, 'tv', TMDB_API_KEY);
+                        if (tmdbResults && tmdbResults.length > 0) {
+                            // Mark all results as anime instead of tv
+                            results = tmdbResults.map(r => ({ ...r, mediaType: 'anime' }));
+                        }
+                    }
                     break;
                 case 'manga':
                     results = await searchManga(query);
@@ -182,10 +191,27 @@ function getUKStreamingPlatform(ukData) {
 
 // Search Google Books
 async function searchBooks(query, apiKey, type = 'book') {
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=5`;
+    // Try multiple search strategies for better Japanese book coverage
+    // 1. Try exact title search first
+    let url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&key=${apiKey}&maxResults=5&langRestrict=en`;
+    let response = await fetch(url);
+    let data = await response.json();
 
-    const response = await fetch(url);
-    const data = await response.json();
+    // 2. If no results, try broader search including international editions
+    if (!response.ok || !data.items?.length) {
+        url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=5`;
+        response = await fetch(url);
+        data = await response.json();
+    }
+
+    // 3. If still no results and query looks like it might be Japanese (contains certain keywords)
+    if (!response.ok || !data.items?.length) {
+        // Try adding common Japanese literature keywords
+        const japaneseKeywords = ['japanese', 'mystery', 'novel'];
+        url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query + ' ' + japaneseKeywords[0])}&key=${apiKey}&maxResults=5`;
+        response = await fetch(url);
+        data = await response.json();
+    }
 
     if (!response.ok || !data.items?.length) return [];
 
@@ -314,13 +340,33 @@ async function searchManga(query) {
 
     // Map all results to our format
     return data.data.map(item => {
+        // Smart platform detection for manga
+        let platform = 'Kindle'; // Default fallback
+
+        // Check if it's published by VIZ (Shueisha, Shogakukan, or Hakusensha titles)
+        const vizPublishers = ['Shueisha', 'Shogakukan', 'Hakusensha'];
+        const publishers = item.serializations?.map(s => s.name) || [];
+
+        // Popular Weekly Shonen Jump titles are on Manga Plus
+        const jumpMagazines = ['Shounen Jump', 'Weekly Shounen Jump', 'Jump SQ', 'Shonen Jump'];
+        const magazines = item.serializations?.map(s => s.name) || [];
+
+        if (magazines.some(mag => jumpMagazines.some(jump => mag.includes(jump)))) {
+            platform = 'Manga Plus';
+        } else if (publishers.some(pub => vizPublishers.some(viz => pub.includes(viz)))) {
+            platform = 'VIZ';
+        } else if (item.score && item.score > 8.0) {
+            // High-rated manga often available on VIZ or Manga Plus
+            platform = 'VIZ';
+        }
+
         return {
             mediaType: 'manga',
             title: item.title_english || item.title,
             year: item.published?.prop?.from?.year?.toString() || '',
             overview: item.synopsis || '',
             imageUrl: item.images?.jpg?.large_image_url || item.images?.jpg?.image_url || null,
-            platform: 'Kindle', // Most manga available on Kindle
+            platform,
             genres: item.genres?.map(g => g.name) || [],
             externalUrl: item.url,
             score: (item.members || 0) / 1000

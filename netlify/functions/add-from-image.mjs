@@ -76,6 +76,7 @@ export default async (request, context) => {
 Respond with ONLY a JSON object in this exact format, no other text:
 {
   "title": "The exact title of the media",
+  "alternateTitle": "Japanese/romaji title if applicable, otherwise null",
   "type": "movie|tv|anime|game|book|audiobook|podcast|manga",
   "confidence": "high|medium|low"
 }
@@ -83,11 +84,26 @@ Respond with ONLY a JSON object in this exact format, no other text:
 If you cannot identify the media, respond with:
 {
   "title": null,
+  "alternateTitle": null,
   "type": null,
   "confidence": "none"
 }
 
-Be specific with titles - use the official English title where possible. For TV shows, identify the show name not the episode title.`
+IMPORTANT title guidelines:
+- For Japanese media (anime, manga, Japanese books/games): Include BOTH the English title AND the romaji/Japanese title
+- For anime: Use the most commonly known title (e.g., "Demon Slayer" AND "Kimetsu no Yaiba")
+- For manga: Use the English title if widely known, otherwise use romaji
+- For Japanese books: Use the English translated title if it exists
+- For TV shows: Identify the show name not the episode title
+- For Western media: Use the official English title
+
+Example for anime:
+{
+  "title": "Attack on Titan",
+  "alternateTitle": "Shingeki no Kyojin",
+  "type": "anime",
+  "confidence": "high"
+}`
                             }
                         ]
                     }
@@ -127,17 +143,26 @@ Be specific with titles - use the official English title where possible. For TV 
         }
 
         // Step 2: Search for the identified media
-        const searchResult = await searchMedia(
-            identified.title, 
+        let searchResult = await searchMedia(
+            identified.title,
             identified.type,
             { TMDB_API_KEY, RAWG_API_KEY, GOOGLE_BOOKS_API_KEY }
         );
 
+        // If no result and there's an alternate title (Japanese/romaji), try searching with that
+        if (!searchResult && identified.alternateTitle) {
+            searchResult = await searchMedia(
+                identified.alternateTitle,
+                identified.type,
+                { TMDB_API_KEY, RAWG_API_KEY, GOOGLE_BOOKS_API_KEY }
+            );
+        }
+
         if (!searchResult) {
-            return new Response(JSON.stringify({ 
-                success: false, 
+            return new Response(JSON.stringify({
+                success: false,
                 error: `Could not find "${identified.title}" in database`,
-                identified: { title: identified.title, type: identified.type }
+                identified: { title: identified.title, alternateTitle: identified.alternateTitle, type: identified.type }
             }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
@@ -180,7 +205,16 @@ async function searchMedia(query, type, apiKeys) {
         case 'tv':
             return await searchTMDB(query, 'tv', TMDB_API_KEY);
         case 'anime':
-            return await searchAnime(query);
+            // Try Jikan first, fallback to TMDB if Jikan fails
+            let animeResult = await searchAnime(query);
+            if (!animeResult) {
+                // Fallback to TMDB for anime that might be listed there
+                animeResult = await searchTMDB(query, 'tv', TMDB_API_KEY);
+                if (animeResult) {
+                    animeResult.mediaType = 'anime'; // Ensure it's marked as anime
+                }
+            }
+            return animeResult;
         case 'manga':
             return await searchManga(query);
         case 'book':
@@ -270,18 +304,34 @@ function getUKStreamingPlatform(ukData) {
 }
 
 async function searchBooks(query, apiKey, type = 'book') {
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=5`;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    
+    // Try multiple search strategies for better Japanese book coverage
+    // 1. Try exact title search first
+    let url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&key=${apiKey}&maxResults=5&langRestrict=en`;
+    let response = await fetch(url);
+    let data = await response.json();
+
+    // 2. If no results, try broader search including international editions
+    if (!response.ok || !data.items?.length) {
+        url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=5`;
+        response = await fetch(url);
+        data = await response.json();
+    }
+
+    // 3. If still no results, try adding common Japanese literature keywords
+    if (!response.ok || !data.items?.length) {
+        const japaneseKeywords = ['japanese', 'mystery', 'novel'];
+        url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query + ' ' + japaneseKeywords[0])}&key=${apiKey}&maxResults=5`;
+        response = await fetch(url);
+        data = await response.json();
+    }
+
     if (!response.ok || !data.items?.length) return null;
-    
+
     const item = data.items[0];
     const info = item.volumeInfo;
-    
+
     const isAudiobook = type === 'audiobook';
-    
+
     return {
         mediaType: isAudiobook ? 'audiobook' : 'book',
         title: info.title,
@@ -289,6 +339,7 @@ async function searchBooks(query, apiKey, type = 'book') {
         overview: info.description || '',
         imageUrl: info.imageLinks?.thumbnail?.replace('http:', 'https:') || null,
         platform: isAudiobook ? 'Audible' : 'Kindle',
+        author: info.authors?.join(', ') || '',
         externalUrl: info.infoLink || `https://books.google.com/books?id=${item.id}`
     };
 }
@@ -372,21 +423,41 @@ async function searchAnime(query) {
 
 async function searchManga(query) {
     const url = `https://api.jikan.moe/v4/manga?q=${encodeURIComponent(query)}&limit=5`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     if (!response.ok || !data.data?.length) return null;
-    
+
     const item = data.data[0];
-    
+
+    // Smart platform detection for manga
+    let platform = 'Kindle'; // Default fallback
+
+    // Check if it's published by VIZ (Shueisha, Shogakukan, or Hakusensha titles)
+    const vizPublishers = ['Shueisha', 'Shogakukan', 'Hakusensha'];
+    const publishers = item.serializations?.map(s => s.name) || [];
+
+    // Popular Weekly Shonen Jump titles are on Manga Plus
+    const jumpMagazines = ['Shounen Jump', 'Weekly Shounen Jump', 'Jump SQ', 'Shonen Jump'];
+    const magazines = item.serializations?.map(s => s.name) || [];
+
+    if (magazines.some(mag => jumpMagazines.some(jump => mag.includes(jump)))) {
+        platform = 'Manga Plus';
+    } else if (publishers.some(pub => vizPublishers.some(viz => pub.includes(viz)))) {
+        platform = 'VIZ';
+    } else if (item.score && item.score > 8.0) {
+        // High-rated manga often available on VIZ or Manga Plus
+        platform = 'VIZ';
+    }
+
     return {
         mediaType: 'manga',
         title: item.title_english || item.title,
         year: item.published?.prop?.from?.year?.toString() || '',
         overview: item.synopsis || '',
         imageUrl: item.images?.jpg?.large_image_url || null,
-        platform: 'Kindle',
+        platform,
         externalUrl: item.url
     };
 }
@@ -417,14 +488,14 @@ async function addToNotion(media, token, databaseId) {
     const mediaTypeMap = {
         'movie': 'Movie',
         'tv': 'TV Show',
-        'anime': 'TV Show',
+        'anime': 'Anime', // Distinct from TV Show for proper categorization
         'book': 'Book',
         'audiobook': 'Audiobook',
         'podcast': 'Podcast',
         'game': 'Video Game',
         'manga': 'Comic/Manga'
     };
-    
+
     const platformMap = {
         'Netflix': 'Netflix',
         'Amazon Prime': 'Amazon Prime',
@@ -439,9 +510,20 @@ async function addToNotion(media, token, databaseId) {
         'YouTube': 'YouTube',
         'Steam': 'Steam',
         'PlayStation Store': 'PlayStation Store',
+        'Xbox': 'Xbox',
+        'Nintendo': 'Nintendo',
+        'Epic Games': 'Epic Games',
+        'GOG': 'GOG',
         'Audible': 'Audible',
         'Kindle': 'Kindle',
-        'Crunchyroll': 'Other'
+        // Anime/Manga platforms
+        'Crunchyroll': 'Crunchyroll',
+        'Funimation': 'Crunchyroll',
+        'Hidive': 'Hidive',
+        // Book platforms
+        'ComiXology': 'ComiXology',
+        'Manga Plus': 'Manga Plus',
+        'VIZ': 'VIZ'
     };
 
     const properties = {
