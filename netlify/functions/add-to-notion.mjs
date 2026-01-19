@@ -21,10 +21,11 @@ export default async (request, context) => {
         const media = await request.json();
         
         // Map media type to Notion's options
+        // NOTE: Ensure your Notion database has these media type options in the "Media Type" select field
         const mediaTypeMap = {
             'movie': 'Movie',
             'tv': 'TV Show',
-            'anime': 'TV Show', // Anime goes under TV Show
+            'anime': 'Anime', // Distinct from TV Show for proper categorization
             'book': 'Book',
             'audiobook': 'Audiobook',
             'podcast': 'Podcast',
@@ -33,6 +34,7 @@ export default async (request, context) => {
         };
         
         // Map platform to Notion's options
+        // NOTE: Ensure your Notion database has these platform options in the "Platform/Service" select field
         const platformMap = {
             'Netflix': 'Netflix',
             'Amazon Prime': 'Amazon Prime',
@@ -47,13 +49,20 @@ export default async (request, context) => {
             'YouTube': 'YouTube',
             'Steam': 'Steam',
             'PlayStation Store': 'PlayStation Store',
+            'Xbox': 'Xbox',
+            'Nintendo': 'Nintendo',
+            'Epic Games': 'Epic Games',
+            'GOG': 'GOG',
             'Audible': 'Audible',
             'Kindle': 'Kindle',
-            'Crunchyroll': 'Other', // Map to Other if not in list
-            'Xbox': 'Other',
-            'Nintendo': 'Other',
-            'Epic Games': 'Other',
-            'GOG': 'Other'
+            // Anime/Manga platforms
+            'Crunchyroll': 'Crunchyroll',
+            'Funimation': 'Crunchyroll', // Merged with Crunchyroll
+            'Hidive': 'Hidive',
+            // Book platforms (including Japanese literature)
+            'ComiXology': 'ComiXology',
+            'Manga Plus': 'Manga Plus',
+            'VIZ': 'VIZ'
         };
 
         // Map genres to Notion's available options

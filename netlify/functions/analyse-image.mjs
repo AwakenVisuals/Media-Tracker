@@ -75,6 +75,7 @@ export default async (request, context) => {
 Respond with ONLY a JSON object in this exact format, no other text:
 {
   "title": "The exact title of the media",
+  "alternateTitle": "Japanese/romaji title if applicable, otherwise null",
   "type": "movie|tv|anime|game|book|audiobook|podcast|manga",
   "confidence": "high|medium|low"
 }
@@ -82,11 +83,26 @@ Respond with ONLY a JSON object in this exact format, no other text:
 If you cannot identify the media, respond with:
 {
   "title": null,
+  "alternateTitle": null,
   "type": null,
   "confidence": "none"
 }
 
-Be specific with titles - use the official English title where possible. For TV shows, identify the show name not the episode title.`
+IMPORTANT title guidelines:
+- For Japanese media (anime, manga, Japanese books/games): Include BOTH the English title AND the romaji/Japanese title
+- For anime: Use the most commonly known title (e.g., "Demon Slayer" AND "Kimetsu no Yaiba")
+- For manga: Use the English title if widely known, otherwise use romaji
+- For Japanese books: Use the English translated title if it exists
+- For TV shows: Identify the show name not the episode title
+- For Western media: Use the official English title
+
+Example for anime:
+{
+  "title": "Attack on Titan",
+  "alternateTitle": "Shingeki no Kyojin",
+  "type": "anime",
+  "confidence": "high"
+}`
                             }
                         ]
                     }
@@ -125,6 +141,7 @@ Be specific with titles - use the official English title where possible. For TV 
         return new Response(JSON.stringify({
             identified: true,
             title: result.title,
+            alternateTitle: result.alternateTitle || null,
             type: result.type,
             confidence: result.confidence
         }), {
