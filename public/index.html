@@ -394,12 +394,16 @@
         }
 
         .upload-btn {
+            display: block;
             background: var(--bg-tertiary);
             border: 2px dashed var(--border-color);
             border-radius: 12px;
             padding: 24px;
             cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
+            transition: border-color 0.2s, background 0.2s, transform 0.1s;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .upload-btn:hover {
@@ -407,14 +411,27 @@
             background: var(--bg-elevated);
         }
 
+        .upload-btn:active {
+            transform: scale(0.98);
+            border-color: var(--accent-blue);
+            background: var(--bg-elevated);
+        }
+
+        .upload-btn:focus-visible {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: 2px;
+        }
+
         .upload-icon {
             font-size: 36px;
             margin-bottom: 8px;
+            pointer-events: none;
         }
 
         .upload-text {
             font-size: 15px;
             color: var(--text-secondary);
+            pointer-events: none;
         }
 
         #image-input {
