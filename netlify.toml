@@ -1,9 +1,25 @@
 [build]
   publish = "public"
   functions = "netlify/functions"
+  # No build command needed - using serverless functions only
 
 [functions]
   node_bundler = "esbuild"
+
+# Automatically deploy when pushing to main branch
+[context.production]
+  command = ""
+  publish = "public"
+
+# Deploy previews for pull requests
+[context.deploy-preview]
+  command = ""
+  publish = "public"
+
+# Branch deploys (optional - for testing feature branches)
+[context.branch-deploy]
+  command = ""
+  publish = "public"
 
 [[headers]]
   for = "/*"
