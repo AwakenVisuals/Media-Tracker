@@ -317,12 +317,39 @@ async function searchBooks(query, apiKey, type = 'book') {
         data = await response.json();
     }
 
-    // 3. If still no results, try adding common Japanese literature keywords
+    // 3. Try with "japanese" keyword
     if (!response.ok || !data.items?.length) {
-        const japaneseKeywords = ['japanese', 'mystery', 'novel'];
-        url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query + ' ' + japaneseKeywords[0])}&key=${apiKey}&maxResults=5`;
+        url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query + ' japanese')}&key=${apiKey}&maxResults=5`;
         response = await fetch(url);
         data = await response.json();
+    }
+
+    // 4. Try with "novel" keyword for fiction
+    if (!response.ok || !data.items?.length) {
+        url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query + ' novel')}&key=${apiKey}&maxResults=5`;
+        response = await fetch(url);
+        data = await response.json();
+    }
+
+    // 5. Try removing common articles (The, A, An) from the beginning
+    if (!response.ok || !data.items?.length) {
+        const cleanedQuery = query.replace(/^(The|A|An)\s+/i, '');
+        if (cleanedQuery !== query) {
+            url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(cleanedQuery)}&key=${apiKey}&maxResults=5`;
+            response = await fetch(url);
+            data = await response.json();
+        }
+    }
+
+    // 6. Last resort: try with partial title (first few words)
+    if (!response.ok || !data.items?.length) {
+        const words = query.split(' ');
+        if (words.length > 3) {
+            const partialQuery = words.slice(0, 3).join(' ');
+            url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(partialQuery)}&key=${apiKey}&maxResults=10`;
+            response = await fetch(url);
+            data = await response.json();
+        }
     }
 
     if (!response.ok || !data.items?.length) return null;
