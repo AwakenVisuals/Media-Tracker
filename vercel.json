@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "buildCommand": null,
+  "outputDirectory": "public",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
+    }
+  ],
+  "env": {
+    "ANTHROPIC_API_KEY": "@anthropic_api_key",
+    "TMDB_API_KEY": "@tmdb_api_key",
+    "RAWG_API_KEY": "@rawg_api_key",
+    "GOOGLE_BOOKS_API_KEY": "@google_books_api_key",
+    "NOTION_TOKEN": "@notion_token",
+    "NOTION_DATABASE_ID": "@notion_database_id"
+  }
+}
