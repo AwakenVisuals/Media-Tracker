@@ -699,6 +699,38 @@
             setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
         }
 
+        // Private app: every request carries the passcode (saved on this device only).
+        const PASSCODE_KEY = 'mediaTrackerPasscode';
+        function getPasscode() {
+            try { return localStorage.getItem(PASSCODE_KEY) || ''; } catch (e) { return ''; }
+        }
+        function setPasscode(value) {
+            try {
+                if (value) localStorage.setItem(PASSCODE_KEY, value);
+                else localStorage.removeItem(PASSCODE_KEY);
+            } catch (e) {}
+        }
+        async function apiFetch(url, options) {
+            let passcode = getPasscode();
+            for (let attempt = 0; attempt < 3; attempt++) {
+                if (!passcode) {
+                    passcode = (window.prompt('Enter your Media Tracker passcode') || '').trim();
+                    if (!passcode) throw new Error('Passcode needed to use Media Tracker');
+                }
+                const response = await fetch(url, {
+                    ...options,
+                    headers: { ...(options.headers || {}), 'x-app-key': passcode }
+                });
+                if (response.status !== 401) {
+                    setPasscode(passcode);
+                    return response;
+                }
+                setPasscode('');
+                passcode = '';
+            }
+            throw new Error('Wrong passcode');
+        }
+
         // Check URL params on load
         function checkUrlParams() {
             const params = new URLSearchParams(window.location.search);
@@ -729,7 +761,7 @@
 
             try {
                 // Call the unified search endpoint
-                const searchResponse = await fetch('/api/search', {
+                const searchResponse = await apiFetch('/api/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query, type })
@@ -816,7 +848,7 @@
             elements.loadingText.textContent = 'Adding to Notion...';
 
             try {
-                const addResponse = await fetch('/api/add-to-notion', {
+                const addResponse = await apiFetch('/api/add-to-notion', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(selectedResult)
@@ -853,7 +885,7 @@
                 const base64 = await fileToBase64(file);
 
                 // Analyze image with Claude
-                const analyzeResponse = await fetch('/api/analyse-image', {
+                const analyzeResponse = await apiFetch('/api/analyse-image', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: base64 })
@@ -874,7 +906,7 @@
                 // Search for the identified media
                 elements.loadingText.textContent = `Searching for "${title}"...`;
 
-                const searchResponse = await fetch('/api/search', {
+                const searchResponse = await apiFetch('/api/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query: title, type: type || 'auto' })

@@ -56,13 +56,14 @@ Add films and TV shows to your Notion watchlist instantly - capture a screenshot
 ### Step 3: Add Environment Variables
 
 1. In Netlify, go to **Site settings** → **Environment variables**
-2. Add these three variables:
+2. Add these variables:
 
 | Key | Value |
 |-----|-------|
 | `TMDB_API_KEY` | Your TMDB API key |
 | `NOTION_TOKEN` | Your Notion integration token (starts with `secret_`) |
 | `NOTION_DATABASE_ID` | `2e83ae6e0396804e9a6af7933b74c3e4` |
+| `APP_PASSCODE` | A long passcode you make up. **Required** — without it the app refuses every request |
 
 3. Click **Save**
 4. Go to **Deploys** → Click **"Trigger deploy"** → **"Deploy site"**
@@ -113,6 +114,12 @@ You can simplify to just:
 3. Choose your Media Tracker shortcut
 
 Or add to Control Center for quick access.
+
+---
+
+## Passcode
+
+The app is private. The first time you use it on a device it asks for your passcode (the `APP_PASSCODE` value) and remembers it on that device. Anything calling the `/api/...` addresses directly (for example a Shortcut using "Get Contents of URL") must send the passcode in a header named `x-app-key`.
 
 ---
 

@@ -1,5 +1,11 @@
 // Netlify Function: Add any media type to Notion database
+import { checkAccess } from '../lib/auth.mjs';
+
 export default async (request, context) => {
+    // Private app: refuse anything without the passcode before doing any work
+    const denied = checkAccess(request);
+    if (denied) return denied;
+
     if (request.method !== 'POST') {
         return new Response(JSON.stringify({ error: 'Method not allowed' }), {
             status: 405,
