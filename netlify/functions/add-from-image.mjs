@@ -1,6 +1,12 @@
 // Netlify Function: Full pipeline - analyse image, search, and add to Notion
 // This is the single endpoint the Apple Shortcut will call
+import { checkAccess } from '../lib/auth.mjs';
+
 export default async (request, context) => {
+    // Private app: refuse anything without the passcode before doing any work
+    const denied = checkAccess(request);
+    if (denied) return denied;
+
     if (request.method !== 'POST') {
         return new Response(JSON.stringify({ error: 'Method not allowed' }), {
             status: 405,
